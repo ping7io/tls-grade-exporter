@@ -24,28 +24,38 @@ public class GradeExporter {
     ResponseEntity<String> toPrometheusResponse(TlsGrade grade) {
         final StringBuilder body = new StringBuilder();
 
-        // tls_grade_info
-        body.append(String.format("tls_grade_info{target=\"%s\", scan_time=\"%s\", grade=\"%s\"} 1",
-                grade.getTarget(), grade.getScanTime(), grade.getGrade()));
-        body.append('\n');
+        if (!grade.isValid()) {
+            // tls_grade_info
+            body.append(String.format("tls_grade_info{target=\"%s\"} 0", grade.getTarget()));
+            body.append('\n');
 
-        // tls_grade_score_overall
-        body.append(createPromtheusMetricsFor("tls_grade_score_overall", grade, grade.getFinalScore()));
-        body.append('\n');
+        } else {
 
-        // tls_grade_score_cipher_strength
-        body.append(
-                createPromtheusMetricsFor("tls_grade_score_cipher_strength", grade, grade.getCipherStrengthScore()));
-        body.append('\n');
+            // tls_grade_info
+            body.append(String.format("tls_grade_info{target=\"%s\", scan_time=\"%s\", grade=\"%s\"} 1",
+                    grade.getTarget(), grade.getScanTime(), grade.getGrade()));
+            body.append('\n');
 
-        // tls_grade_score_key_exchange
-        body.append(createPromtheusMetricsFor("tls_grade_score_key_exchange", grade, grade.getKeyExchangeScore()));
-        body.append('\n');
+            // tls_grade_score_overall
+            body.append(createPromtheusMetricsFor("tls_grade_score_overall", grade, grade.getFinalScore()));
+            body.append('\n');
 
-        // tls_grade_score_protocol_support
-        body.append(
-                createPromtheusMetricsFor("tls_grade_score_protocol_support", grade, grade.getProtocolSupportScore()));
-        body.append('\n');
+            // tls_grade_score_cipher_strength
+            body.append(
+                    createPromtheusMetricsFor("tls_grade_score_cipher_strength", grade,
+                            grade.getCipherStrengthScore()));
+            body.append('\n');
+
+            // tls_grade_score_key_exchange
+            body.append(createPromtheusMetricsFor("tls_grade_score_key_exchange", grade, grade.getKeyExchangeScore()));
+            body.append('\n');
+
+            // tls_grade_score_protocol_support
+            body.append(
+                    createPromtheusMetricsFor("tls_grade_score_protocol_support", grade,
+                            grade.getProtocolSupportScore()));
+            body.append('\n');
+        }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_PLAIN)

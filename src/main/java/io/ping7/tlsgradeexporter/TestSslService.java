@@ -24,7 +24,7 @@ public class TestSslService {
     public Mono<TlsGrade> rate(String target) {
         return Mono.fromFuture(CompletableFuture.supplyAsync(() -> computeTestSslOutput(target)))
             .onErrorComplete()
-            .map(this::toTlsGrade);
+            .map(s -> toTlsGrade(s, target));
     }
 
     private String computeTestSslOutput(String target) {
@@ -48,8 +48,9 @@ public class TestSslService {
         return rating;
     }
 
-    private TlsGrade toTlsGrade(String output) {
+    private TlsGrade toTlsGrade(String output, String target) {
         final TlsGrade grade = new TlsGrade();
+        grade.setTarget(target);
 
         // get all findings from the current run
         try {

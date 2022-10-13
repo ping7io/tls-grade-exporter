@@ -13,4 +13,8 @@ public class TlsGrade {
     private String grade;
     private int scanTime;
 
+    public boolean isValid() {
+        return grade != null && finalScore > 0;
+    }
+
 }
