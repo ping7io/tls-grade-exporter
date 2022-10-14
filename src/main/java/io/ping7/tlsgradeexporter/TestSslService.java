@@ -43,6 +43,7 @@ public class TestSslService {
             rating = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.warning(String.format("Could not execute testssl.sh: %s", e.getMessage()));
+            throw new RuntimeException(e);
         }
 
         return rating;
@@ -85,6 +86,7 @@ public class TestSslService {
             }
         } catch (Exception e) {
             log.warning(String.format("Could not convert testssl result into final grade: %s", e.getMessage()));
+            throw new RuntimeException(e);
         }
 
         return grade;
