@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class GradeExporter {
+public class TlsGradeExporter {
 
     @Autowired
     private TestSslService testSsl;
 
-    @GetMapping("/metrics")
+    @GetMapping("/probe")
     public Mono<ResponseEntity<String>> tlsGradeMetrics(@RequestParam String target) {
         return testSsl.rate(target)
                 .map(this::toPrometheusResponse);
