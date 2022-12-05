@@ -18,19 +18,11 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-java@v3
-      with:
-        java-version: 17
-        distribution: temurin
-        cache: 'maven'
-
-    - name: build JAR from Maven
-      run: mvn --batch-mode --no-transfer-progress  clean verify -DskipTests=true
-
     - name: build Docker file
       uses: docker/build-push-action@v3
       with:
         context: .
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: |
           ghcr.io/ping7io/tls-grade-exporter:latest

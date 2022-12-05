@@ -4,7 +4,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.aot.hint.ExecutableMode;
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,14 +23,15 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @Log
+@ImportRuntimeHints(TestSslService.TestSslServiceRuntimeHints.class)
 public class TestSslService {
 
     private final ObjectMapper om = new ObjectMapper();
 
     public Mono<TlsGrade> rate(String target) {
         return Mono.fromFuture(CompletableFuture.supplyAsync(() -> computeTestSslOutput(target)))
-            .onErrorComplete()
-            .map(s -> toTlsGrade(s, target));
+                .onErrorComplete()
+                .map(s -> toTlsGrade(s, target));
     }
 
     private String computeTestSslOutput(String target) {
@@ -55,7 +62,8 @@ public class TestSslService {
 
         // get all findings from the current run
         try {
-            final List<TestSslFinding> findings = om.readValue(output, new TypeReference<List<TestSslFinding>>(){});
+            final List<TestSslFinding> findings = om.readValue(output, new TypeReference<List<TestSslFinding>>() {
+            });
 
             for (TestSslFinding f : findings) {
                 // protocol_support_score
@@ -95,6 +103,17 @@ public class TestSslService {
     private String[] rateCommandFor(String target) {
         return new String[] { "testssl.sh/testssl.sh", "--quiet", "--color", "0", "--jsonfile",
                 "/dev/stderr", "--quiet", "--hints", target };
+    }
+
+    static class TestSslServiceRuntimeHints implements RuntimeHintsRegistrar {
+
+        @Override
+        public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+            hints.reflection()
+                    .registerType(TestSslFinding.class,
+                            MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                            MemberCategory.INVOKE_PUBLIC_METHODS);
+        }
     }
 
 }
