@@ -1,4 +1,4 @@
-FROM ghcr.io/graalvm/graalvm-ce:ol9-java17-22.3.2 AS builder
+FROM ghcr.io/graalvm/graalvm-ce:ol9-java17-22.3.3 AS builder
 
 ADD . /build
 WORKDIR /build
