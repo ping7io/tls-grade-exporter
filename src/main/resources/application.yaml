@@ -1,6 +1,10 @@
 spring:
   main:
     banner-mode: off
+  cache:
+    cache-names: "targets"
+    caffeine:
+      spec: "maximumSize=256,expireAfterWrite=10m"
 
 server:
   port : 9218

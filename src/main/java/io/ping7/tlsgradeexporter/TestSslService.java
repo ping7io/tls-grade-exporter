@@ -1,25 +1,23 @@
 package io.ping7.tlsgradeexporter;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Set;
 
-import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.core.annotation.Timed;
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.java.Log;
-import reactor.core.publisher.Mono;
 
 /**
  * Runs the test ssl command
@@ -31,11 +29,22 @@ public class TestSslService {
 
     private final ObjectMapper om = new ObjectMapper();
 
+    private final Set<String> activeRatings = new HashSet<>();
+
+    public boolean isCurrentlyRating(String target) {
+        return activeRatings.contains(target);
+    }
+
     @Timed
-    public Mono<TlsGrade> rate(String target) {
-        return Mono.fromFuture(CompletableFuture.supplyAsync(() -> computeTestSslOutput(target)))
-                .onErrorComplete()
-                .map(s -> toTlsGrade(s, target));
+    @Cacheable("targets")
+    public TlsGrade rate(String target) {
+        activeRatings.add(target);
+
+        try {
+            return toTlsGrade(computeTestSslOutput(target), target);
+        } finally {
+            activeRatings.remove(target);
+        }
     }
 
     private String computeTestSslOutput(String target) {
@@ -113,7 +122,7 @@ public class TestSslService {
 
     private String[] rateCommandFor(String target) {
         return new String[] { "testssl.sh/testssl.sh", "--quiet", "--color", "0", "--jsonfile",
-                "/dev/stderr", "--quiet", "--hints", target };
+                "/dev/stderr", "--hints", "--ip", "one", target };
     }
 
     static class TestSslServiceRuntimeHints implements RuntimeHintsRegistrar {

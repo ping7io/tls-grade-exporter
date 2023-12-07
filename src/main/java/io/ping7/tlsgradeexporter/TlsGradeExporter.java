@@ -1,13 +1,13 @@
 package io.ping7.tlsgradeexporter;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties.Http;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import reactor.core.publisher.Mono;
 
 @RestController
 public class TlsGradeExporter {
@@ -16,9 +16,12 @@ public class TlsGradeExporter {
     private TestSslService testSsl;
 
     @GetMapping("/probe")
-    public Mono<ResponseEntity<String>> tlsGradeMetrics(@RequestParam String target) {
-        return testSsl.rate(target)
-                .map(this::toPrometheusResponse);
+    public ResponseEntity<String> tlsGradeMetrics(@RequestParam String target) {
+        if (!testSsl.isCurrentlyRating(target)) {
+            return toPrometheusResponse(testSsl.rate(target));
+        } else {
+            return ResponseEntity.noContent().build();
+        }
     }
 
     ResponseEntity<String> toPrometheusResponse(TlsGrade grade) {

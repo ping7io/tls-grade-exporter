@@ -11,6 +11,6 @@ services:
     - 9090:9090
 
   tls-grade-exporter:
-    image: ghcr.io/ping7io/tls-grade-exporter:latest
+    image: ping7io/tls-grade-exporter:latest
     ports:
       - 9218:9218
