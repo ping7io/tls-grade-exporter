@@ -11,10 +11,13 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StopWatch;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.java.Log;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +31,7 @@ public class TestSslService {
 
     private final ObjectMapper om = new ObjectMapper();
 
+    @Timed
     public Mono<TlsGrade> rate(String target) {
         return Mono.fromFuture(CompletableFuture.supplyAsync(() -> computeTestSslOutput(target)))
                 .onErrorComplete()
@@ -35,10 +39,14 @@ public class TestSslService {
     }
 
     private String computeTestSslOutput(String target) {
+        log.info(String.format("Rating %s ...", target));
 
         String rating = null;
 
         try {
+            final StopWatch sw = new StopWatch();
+            sw.start();
+
             ProcessBuilder builder = new ProcessBuilder();
             builder.command(rateCommandFor(target));
             Process process = builder.start();
@@ -48,6 +56,9 @@ public class TestSslService {
 
             // the JSON result is printed to STDERR
             rating = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            sw.stop();
+            log.info(String.format("Rated %s in %s seconds ...", target, sw.getTotalTimeSeconds()));
         } catch (Exception e) {
             log.warning(String.format("Could not execute testssl.sh: %s", e.getMessage()));
             throw new RuntimeException(e);

@@ -1,2 +1,15 @@
+spring:
+  main:
+    banner-mode: off
+
 server:
   port : 9218
+
+management:
+  endpoints:
+    web.base-path: /
+    web:
+      exposure:
+        include: health, prometheus
+      path-mapping:
+        prometheus: metrics
