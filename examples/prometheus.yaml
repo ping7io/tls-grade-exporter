@@ -1,0 +1,34 @@
+# A Prometheus configuration that scrapes the
+# local Prometheus, the Alertmanager and Alertecho
+# for an alert history.
+global:
+  scrape_interval:     30s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+    - targets:
+      - prometheus:9090
+
+  - job_name: tls-grade-exporter
+    metrics_path: /probe
+    scrape_interval: 10m
+    scrape_timeout: 3m
+    static_configs:
+      - targets:
+        - https://prometheus.io     # Target to probe
+        - https://www.thiswayup.de  # Target to probe
+        - https://ping7.io          # Target to probe
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: tls-grade-exporter:9218  # The tls-grade exporter's real hostname:port.
+
+    # collect blackbox exporter's operational metrics
+  - job_name: tls-grade-exporter-metrics
+    static_configs:
+      - targets:
+        - tls-grade-exporter:9218
