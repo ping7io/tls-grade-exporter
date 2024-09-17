@@ -1,4 +1,4 @@
-FROM ghcr.io/observabilitystack/graalvm-maven-builder:21.0.1-ol9 AS builder
+FROM ghcr.io/observabilitystack/graalvm-maven-builder:22.0.1-ol9 AS builder
 
 ADD . /build
 WORKDIR /build
